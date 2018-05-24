@@ -4,7 +4,8 @@ block content
     | This is a Bias Detection App created by
     | Lauren Alvarez and Sofia Ruiz.
     | Enter a topic you're interested in.
-    input(type="text")
+    input#topic(type="text")
+    button#search Search
   p(style="color:red")
     | Donec congue lacinia dui, a porttitor
     | lectus condimentum laoreet. Nunc eu
@@ -12,6 +13,7 @@ block content
     | lectus vestibulum faucibus eget in metus.
     | In pellentesque faucibus vestibulum. Nulla
     | at nulla justo, eget luctus tortor.
+ 
 block sidebar
   .widget
     h1 Widget
@@ -21,3 +23,6 @@ block sidebar
     p
       | Vivamus hendrerit arcu sed erat molestie
       | vehicula.
+block scripts  
+   script(src="https://code.jquery.com/jquery-3.3.1.min.js", defer)
+   script(src="js/index.js", defer)
