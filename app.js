@@ -2,15 +2,24 @@
  * Module dependencies
  */
 var express = require('express'),
+	session = require('express-session'),
     stylus = require('stylus'),
-    nib = require('nib')
-
+    nib = require('nib'),
+    rp = require('request-promise'),
+	cheerio = require('cheerio'),
+	options = {
+	  uri: `http://money.cnn.com/2017/04/04/pf/equal-pay-day-gender-pay-gap/index.html`,
+	  transform: function (body) {
+	    return cheerio.load(body);
+	  }
+	};    
 var app = express()
 function compile(str, path) {
   return stylus(str)
     .set('filename', path)
     .use(nib())
 }
+
 app.set('views', __dirname + '/views')
 app.set('view engine', 'jade')
 app.use(express.logger('dev'))
@@ -27,29 +36,33 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 })); 
 app.use(express.json());       // to support JSON-encoded bodies
 app.use(express.urlencoded()); // to support URL-encoded bodies
+app.use(session({ secret: 'this-is-a-secret-token', cookie: { maxAge: 60000 }}));
+
+
+// --------------------------------------------------------------
+// Routes  
+// --------------------------------------------------------------
 app.get('/', function (req, res) {
     res.render('index',
     { title : 'Home' }
     )
+    //req.session = {}
 })
+
 app.get('/results', function (req, res) {
     res.render('results',
-    { title : 'Results' }
-    )
+    { 
+    	  title: 'Results',
+    	  topic: req.session.topic
+    	  //text:
+    	})
+    console.log(req.session.topic)
 })
+
 app.post('/search', function(req, res){
-		console.log(req.body)
-		res.send(200)
+	req.session.topic = req.body.topic
+	res.send(200)
 })
-    
-const rp = require('request-promise');
-const cheerio = require('cheerio');
-const options = {
-		  uri: `http://money.cnn.com/2017/04/04/pf/equal-pay-day-gender-pay-gap/index.html`,
-		  transform: function (body) {
-		    return cheerio.load(body);
-		  }
-		};
 
 rp(options)
 .then(($) => {
