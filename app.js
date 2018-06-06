@@ -7,13 +7,7 @@ var express = require('express'),
     nib = require('nib'),
     rp = require('request-promise'),
 	cheerio = require('cheerio'),
-	options = {
-	  uri: `http://money.cnn.com/2017/04/04/pf/equal-pay-day-gender-pay-gap/index.html`,
-	  transform: function (body) {
-	    return cheerio.load(body);
-	  }
-	};    
-var app = express()
+	app = express()
 function compile(str, path) {
   return stylus(str)
     .set('filename', path)
@@ -42,39 +36,46 @@ app.use(session({ secret: 'this-is-a-secret-token', cookie: { maxAge: 60000 }}))
 // --------------------------------------------------------------
 // Routes  
 // --------------------------------------------------------------
+
 app.get('/', function (req, res) {
     res.render('index',
     { title : 'Home' }
     )
-    //req.session = {}
+    
 })
-
-app.get('/results', function (req, res) {
-    res.render('results',
-    { 
-    	  title: 'Results',
-    	  topic: req.session.topic
-    	  //text:
-    	})
-    console.log(req.session.topic)
-})
-
 app.post('/search', function(req, res){
 	req.session.topic = req.body.topic
 	res.send(200)
 })
 
-rp(options)
-.then(($) => {
-  console.log($("#storytext").text());
+app.get('/results', function (req, res) {
+	let options = {
+	  uri: `http://money.cnn.com/2017/04/04/pf/equal-pay-day-gender-pay-gap/index.html`,
+	  transform: function (body) {
+	    return cheerio.load(body);
+	  }
+	};
+	rp(options)
+    .then(function(data)  {
+    	let text = data("#storytext").text()
+    res.render('results',
+    { 
+    	  title: 'Results',
+    	  topic: req.session.topic,
+    	  text: text
+    	}) 
+    	console.log(req.session.topic)
+    	console.log(text)
+    });
 })
-.catch((err) => {
-  console.log(err);
-});
-    
+
+
+
+
+//console.log(data)
+
 app.listen(3000)
 
 console.log("Server started...")
     
-    
-    
+  
