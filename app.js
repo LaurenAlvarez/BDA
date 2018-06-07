@@ -9,6 +9,7 @@ var express = require('express'),
 	cheerio = require('cheerio'),
 	request = require('request'),
 	sec = require('search-engine-client');
+	extractor = require('node-article-extractor');
 	app = express()
 
 	
@@ -55,24 +56,44 @@ app.post('/search', function(req, res){
 //--------------------------------------------------------------
 // Domain Scraping
 // --------------------------------------------------------------
+var errHandler = function(err) {
+    console.log(err);
+}
 
 app.get('/results', function (req, res) {
 	let path = req.session.topic
-	sec.google("cnn.com " + path).then(function(result){
-	    console.log(result);
-	});
-	/*
-	let linkPromises = urlSearcher(path)
-	let links = []
-	let addToLinks = function (url) {
-		console.log(url)
-		links.push(url)
-	}
-	let printLinks = function (url) {
-		console.log(url)
-	}
-	Promise.all(linkPromises).then(printLinks)
+	let html = "cnn.com " + path
+	let result = []
+	let nUrls = 5
+	sec.google(html).then(function(result){
+		let promises = []
+		for(let i= 0; i < nUrls; i++){
+			promises.push(
+				new Promise(function(resolve, reject){
+					let options = {
+							uri: result.links[i],
+							transform: function(body){
+								return cheerio.load(body);
+							}
+						};
+					rp(options)
+				    .then(function(data)  {
+					    resolve(data);
+					}, errHandler)
+				})
+			)		
+		}
+		console.log(result);
+		return Promise.all(promises)
+	}, errHandler).then (function(result){
+		data = extractor(result[0].html);
+		console.log(result);
+	}, errHandler)
 	
+
+	/*
+	
+	    
 	res.render('results',
 	  { 
 	    title: 'Results',
@@ -82,50 +103,7 @@ app.get('/results', function (req, res) {
 	  */
 })
 
-//--------------------------------------------------------------
-// Helper Functions
-// --------------------------------------------------------------
-/*
-function urlSearcher(topic){
-	let linkCounter = 5
-	let links = []
-	var google = {
-			query: 'cnn.com ' + topic,
-			age: 'y',
-			limit: 5
-		};
-	while (linkCounter > 0){
-		linkCounter--
-		links.push( 
-				//Async call:
-				gss.getSearch(topic).then(function(response))
-		)
-	}
-	return links;
-}
-*/
-/*
-function urlScraper(url){
-    let textCounter = 5
-    let text = []
-    let options = {
-			uri: url,
-			transform: function (body) {
-			    return cheerio.load(body);
-			}
-		};
-	rp.(options)
-	    .then(function(data)  {
-		    if (textCounter > 0){
-		    }
-		    textCounter--
-		    if (textCounter == 0){
-		        text.push(data("#storytext").text());
-		        let allTexts = text.concat().text
-		    }
-		}
-}
-*/
+
 app.listen(3000)
 
 console.log("Server started...")
