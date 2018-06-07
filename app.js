@@ -7,7 +7,13 @@ var express = require('express'),
     nib = require('nib'),
     rp = require('request-promise'),
 	cheerio = require('cheerio'),
+	request = require('request'),
+	_ = require('lodash'),
+	async = require('async'),
+	scraper = require('google-search-scraper'),
 	app = express()
+
+	
 function compile(str, path) {
   return stylus(str)
     .set('filename', path)
@@ -49,27 +55,66 @@ app.post('/search', function(req, res){
 })
 
 app.get('/results', function (req, res) {
+	let linkCounter = 0
+	let path = req.session.topic
+	var google = {
+			  query: 'cnn.com ' + path.toString(),
+			  age: 'y',
+			  limit: 5
+			};
+			 
+	scraper.search(google, function(err, url) {
+	  // This is called for each result
+	  if(err) throw err;
+	  console.log(url)
+	});
+	
 	let options = {
-	  uri: `http://money.cnn.com/2017/04/04/pf/equal-pay-day-gender-pay-gap/index.html`,
+	  uri: ' ',
 	  transform: function (body) {
 	    return cheerio.load(body);
 	  }
 	};
+	
 	rp(options)
     .then(function(data)  {
-    	let text = data("#storytext").text()
+    	let text = data("#cnn-search__results-list").text()
+    	
     res.render('results',
     { 
     	  title: 'Results',
     	  topic: req.session.topic,
     	  text: text
-    	}) 
-    	console.log(req.session.topic)
+    	})
+    	
+    //	console.log(req.session.topic)
+   	//console.log(path)
+    	console.log(options.uri)
     	console.log(text)
+    	
     });
+    
 })
 
-
+//--------------------------------------------------------------
+// Domain Scraping
+// --------------------------------------------------------------
+	//var url = 'http://www.cnn.com/';
+	//var path = function (req, res){
+	//	req.session.topic = req.body.topic
+	//	res.send(200)
+	//}
+	//console.log(path)
+	//var search = url + path
+	
+//request(url, function(error, res, body){
+//	var links = [];
+//	var $ = cheerio.load(body);
+//	$('a').each(function(i, elem){
+//	console.log($(elem).text(), elem.attribs.href);
+//	links.push(elem);
+//	});
+//});
 
 
 //console.log(data)
