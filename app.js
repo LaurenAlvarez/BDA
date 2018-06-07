@@ -8,9 +8,15 @@ var express = require('express'),
     rp = require('request-promise'),
 	cheerio = require('cheerio'),
 	request = require('request'),
-	sec = require('search-engine-client');
-	extractor = require('node-article-extractor');
-	app = express()
+	sec = require('search-engine-client'),
+	extractor = require('unfluff'),
+	app = express(),
+	
+	searchDomains = [
+	'money.cnn.com',
+	'bbc.com',
+	'foxnews.com'
+	];
 
 	
 function compile(str, path) {
@@ -62,9 +68,10 @@ var errHandler = function(err) {
 
 app.get('/results', function (req, res) {
 	let path = req.session.topic
-	let html = "cnn.com " + path
+	let html = "cnn.com " + path + " filetype:html"
 	let result = []
 	let nUrls = 5
+	let articleTexts = []
 	sec.google(html).then(function(result){
 		let promises = []
 		for(let i= 0; i < nUrls; i++){
@@ -83,11 +90,12 @@ app.get('/results', function (req, res) {
 				})
 			)		
 		}
-		console.log(result);
+		//console.log(result);
 		return Promise.all(promises)
 	}, errHandler).then (function(result){
-		data = extractor(result[0].html);
-		console.log(result);
+		data = extractor(result[0].html());
+		console.log(data);
+		//console.log(result[0].html());
 	}, errHandler)
 	
 
