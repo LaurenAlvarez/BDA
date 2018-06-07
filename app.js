@@ -54,79 +54,60 @@ app.post('/search', function(req, res){
 	res.send(200)
 })
 
+//--------------------------------------------------------------
+// Domain Scraping
+// --------------------------------------------------------------
+
+
 app.get('/results', function (req, res) {
 	let linkCounter = 5
+	let textCounter = 5
 	let links = []
 	let text = []
 	let path = req.session.topic
 	var google = {
-			  query: 'cnn.com ' + path.toString(),
-			  age: 'y',
-			  limit: 5
-			};
-	
-		scraper.search(google, function(err, url) {
-			  // This is called for each result
-			  if(err) throw err;
-			  console.log(url)
-			  if (linkCounter > 0) {
-				  links.push(url)
+	  query: 'cnn.com ' + path.toString(),
+	  age: 'y',
+	  limit: 5
+	};
+	scraper.search(google, function(err, url) {
+	  // This is called for each result
+	  if(err) throw err;
+	  console.log(url)
+	  if (linkCounter > 0) {
+		  links.push(url)
+	  }
+	  linkCounter--
+	  if (linkCounter == 0){
+		  let options = {
+			  uri: links[0],
+			  transform: function (body) {
+			    return cheerio.load(body);
 			  }
-			  linkCounter--
-			  if (linkCounter == 0){
-				  let options = {
-						  uri: links[0],
-						  transform: function (body) {
-						    return cheerio.load(body);
-						  }
-						};
-						rp(options)
-					    .then(function(data)  {
-						    text.push(data("#storytext").text())
-
-						    res.render('results',
-						    { 
-						    	  title: 'Results',
-						    	  topic: req.session.topic,
-						    	  text: text[0]
-						    	})
-						    	
-						    //	console.log(req.session.topic)
-						   	//console.log(path)
-						    	console.log(options.uri)
-						    	console.log(text)
-						    	
-					    });
-			  }
-			});
-
-		
-	
-    
+		  };
+	  }
+	  rp(options)
+	   then(function(data)  {
+		  if (textCounter > 0){
+		  }
+		  textCounter--
+		  if (textCounter == 0){
+		    text.push(data("#storytext").text())
+		    let allTexts = text.concat().text
+		    res.render('results',
+		    { 
+		    	  title: 'Results',
+		    	  topic: req.session.topic,
+		    	  text:allText
+		    	})
+		    //	console.log(req.session.topic)
+		   	//console.log(path)
+		    	console.log(options.uri)
+		    	console.log(text)
+		  });
+	   }
+	});    
 })
-
-//--------------------------------------------------------------
-// Domain Scraping
-// --------------------------------------------------------------
-	//var url = 'http://www.cnn.com/';
-	//var path = function (req, res){
-	//	req.session.topic = req.body.topic
-	//	res.send(200)
-	//}
-	//console.log(path)
-	//var search = url + path
-	
-//request(url, function(error, res, body){
-//	var links = [];
-//	var $ = cheerio.load(body);
-//	$('a').each(function(i, elem){
-//	console.log($(elem).text(), elem.attribs.href);
-//	links.push(elem);
-//	});
-//});
-
-
-//console.log(data)
 
 app.listen(3000)
 
