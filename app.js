@@ -8,9 +8,7 @@ var express = require('express'),
     rp = require('request-promise'),
 	cheerio = require('cheerio'),
 	request = require('request'),
-	_ = require('lodash'),
-	async = require('async'),
-	scraper = require('google-search-scraper'),
+	sec = require('search-engine-client');
 	app = express()
 
 	
@@ -58,23 +56,36 @@ app.post('/search', function(req, res){
 // Domain Scraping
 // --------------------------------------------------------------
 
-
 app.get('/results', function (req, res) {
 	let path = req.session.topic
-	let links = urlSearcher(path)
+	sec.google("cnn.com " + path).then(function(result){
+	    console.log(result);
+	});
+	/*
+	let linkPromises = urlSearcher(path)
+	let links = []
+	let addToLinks = function (url) {
+		console.log(url)
+		links.push(url)
+	}
+	let printLinks = function (url) {
+		console.log(url)
+	}
+	Promise.all(linkPromises).then(printLinks)
+	
 	res.render('results',
 	  { 
 	    title: 'Results',
 	    	topic: req.session.topic,
 	    	text: text
 	  })
-	  
+	  */
 })
 
 //--------------------------------------------------------------
 // Helper Functions
 // --------------------------------------------------------------
-
+/*
 function urlSearcher(topic){
 	let linkCounter = 5
 	let links = []
@@ -83,22 +94,17 @@ function urlSearcher(topic){
 			age: 'y',
 			limit: 5
 		};
-	while (linkCounter>0){
-		links.push()
-	}
-	scraper.search(google, function(err, url) {
-	    // This is called for each result
-	    if(err) throw err;
-	    console.log(url)
-		if (linkCounter > 0) {
-			links.push(url)
-		}
+	while (linkCounter > 0){
 		linkCounter--
-		if (linkCounter <= 0){
-			return links
-		}
-	});
+		links.push( 
+				//Async call:
+				gss.getSearch(topic).then(function(response))
+		)
+	}
+	return links;
 }
+*/
+/*
 function urlScraper(url){
     let textCounter = 5
     let text = []
@@ -119,7 +125,7 @@ function urlScraper(url){
 		    }
 		}
 }
-
+*/
 app.listen(3000)
 
 console.log("Server started...")

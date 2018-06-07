@@ -6,15 +6,20 @@
         "async": "^2.6.1",
         "body-parser": "^1.18.3",
         "cheerio": "^1.0.0-rc.2",
+        "es6-promise": "^4.2.4",
         "express": "3.0.0alpha4",
         "express-session": "^1.15.6",
         "google": "^2.1.0",
+        "google-search-scrape": "^0.2.5",
         "google-search-scraper": "0.0.3",
+        "isomorphic-fetch": "^2.2.1",
         "jade": "^1.0.4",
         "lodash": "^4.17.10",
         "nib": "^1.0.4",
+        "promise-polyfill": "8.0.0",
         "request": "^2.87.0",
         "request-promise": "^4.2.2",
+        "search-engine-client": "^1.2.6",
         "stylus": "^0.49.1"
     }
 }
