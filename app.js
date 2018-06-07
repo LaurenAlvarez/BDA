@@ -55,44 +55,53 @@ app.post('/search', function(req, res){
 })
 
 app.get('/results', function (req, res) {
-	let linkCounter = 0
+	let linkCounter = 5
+	let links = []
+	let text = []
 	let path = req.session.topic
 	var google = {
 			  query: 'cnn.com ' + path.toString(),
 			  age: 'y',
 			  limit: 5
 			};
-			 
-	scraper.search(google, function(err, url) {
-	  // This is called for each result
-	  if(err) throw err;
-	  console.log(url)
-	});
 	
-	let options = {
-	  uri: ' ',
-	  transform: function (body) {
-	    return cheerio.load(body);
-	  }
-	};
+		scraper.search(google, function(err, url) {
+			  // This is called for each result
+			  if(err) throw err;
+			  console.log(url)
+			  if (linkCounter > 0) {
+				  links.push(url)
+			  }
+			  linkCounter--
+			  if (linkCounter == 0){
+				  let options = {
+						  uri: links[0],
+						  transform: function (body) {
+						    return cheerio.load(body);
+						  }
+						};
+						rp(options)
+					    .then(function(data)  {
+						    text.push(data("#storytext").text())
+
+						    res.render('results',
+						    { 
+						    	  title: 'Results',
+						    	  topic: req.session.topic,
+						    	  text: text[0]
+						    	})
+						    	
+						    //	console.log(req.session.topic)
+						   	//console.log(path)
+						    	console.log(options.uri)
+						    	console.log(text)
+						    	
+					    });
+			  }
+			});
+
+		
 	
-	rp(options)
-    .then(function(data)  {
-    	let text = data("#cnn-search__results-list").text()
-    	
-    res.render('results',
-    { 
-    	  title: 'Results',
-    	  topic: req.session.topic,
-    	  text: text
-    	})
-    	
-    //	console.log(req.session.topic)
-   	//console.log(path)
-    	console.log(options.uri)
-    	console.log(text)
-    	
-    });
     
 })
 
