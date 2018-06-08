@@ -68,40 +68,41 @@ var errHandler = function(err) {
 
 app.get('/results', function (req, res) {
 	let path = req.session.topic
-	let html = "cnn.com " + path + " filetype:html"
 	let result = []
 	let nUrls = 5
 	let articleTexts = []
-	sec.google(html).then(function(result){
-		let promises = []
-		for(let i= 0; i < nUrls; i++){
-			promises.push(
-				new Promise(function(resolve, reject){
-					let options = {
-							uri: result.links[i],
-							transform: function(body){
-								return cheerio.load(body);
-							}
-						};
-					rp(options)
-				    .then(function(data)  {
-					    resolve(data);
-					}, errHandler)
-				})
-			)		
-		}
-		//console.log(result);
-		return Promise.all(promises)
-	}, errHandler).then (function(result){
-		data = extractor(result[0].html());
-		console.log(data);
-		//console.log(result[0].html());
-	}, errHandler)
-	
+	for (let k = 0; k < searchDomains.length; k++ ) {
+		let html = searchDomains[k] + path + " filetype:html"
+		sec.google(html).then(function(result){
+			let promises = []
+			for(let i= 0; i < nUrls; i++){
+				promises.push(
+					new Promise(function(resolve, reject){
+						let options = {
+								uri: result.links[i],
+								transform: function(body){
+									return cheerio.load(body);
+								}
+							};
+						rp(options)
+					    .then(function(data)  {
+						    resolve(data);
+						}, errHandler)
+					})
+				)		
+			}
+			//console.log(result);
+			return Promise.all(promises)
+		}, errHandler).then (function(result){
+			for (j = 0; j < result.length; j++){
+				data = extractor(result[j].html());
+				console.log(data);
+				//console.log(result[0].html());
+			}
+		}, errHandler)
+	}
 
 	/*
-	
-	    
 	res.render('results',
 	  { 
 	    title: 'Results',
