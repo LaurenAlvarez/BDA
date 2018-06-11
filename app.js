@@ -12,6 +12,8 @@ var express = require('express'),
 	extractor = require('unfluff'),
 	app = express(),
 	striptags = require('striptags'),
+	wordsOnly = require('words-only'),
+	lda = require('lda'),
 	
 	searchDomains = [
 	'money.cnn.com',
@@ -74,6 +76,7 @@ app.get('/results', function (req, res) {
 	let nUrls = 5
 	let articleTexts = []
 	let mappy = {};
+	
 	for (let k = 0; k < searchDomains.length; k++ ) {
 		let html = searchDomains[k] + path + " filetype:html"
 		sec.google(html).then(function(result){
@@ -103,11 +106,16 @@ app.get('/results', function (req, res) {
 				if (mappy[result[j].publisher] === undefined){
 					mappy[result[j].publisher] = [];
 				}
-				let sanitize = striptags(data.text);
+				let sanitize = wordsOnly(striptags(data.text)).toUpperCase();
 				mappy[result[j].publisher].push(sanitize);
 				console.log(sanitize);
-				console.log("----------------------");
+				console.log(j)
+				console.log("-------------------------------------------");
 			}
+			let allText = Object.values(mappy)
+			console.log(allText)
+			//let ldaResult = lda(Object.values(mappy), 3, 5);
+			//console.log(ldaResult);
 		}, errHandler)	
 	}
 	/*
