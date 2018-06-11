@@ -11,6 +11,7 @@ var express = require('express'),
 	sec = require('search-engine-client'),
 	extractor = require('unfluff'),
 	app = express(),
+	striptags = require('striptags'),
 	
 	searchDomains = [
 	'money.cnn.com',
@@ -18,6 +19,7 @@ var express = require('express'),
 	'foxnews.com'
 	];
 
+	
 	
 function compile(str, path) {
   return stylus(str)
@@ -71,6 +73,7 @@ app.get('/results', function (req, res) {
 	let result = []
 	let nUrls = 5
 	let articleTexts = []
+	let mappy = {};
 	for (let k = 0; k < searchDomains.length; k++ ) {
 		let html = searchDomains[k] + path + " filetype:html"
 		sec.google(html).then(function(result){
@@ -96,12 +99,14 @@ app.get('/results', function (req, res) {
 		}, errHandler).then (function(result){
 			for (j = 0; j < result.length; j++){
 				data = extractor(result[j].html());
-				console.log(data);
-				//console.log(result[0].html());
+					striptags(data);
+					console.log(data);
+					mappy[result[j].publisher] =[];
+					mappy[result[j].publisher].push(result[j].html);
+					//console.log(result[0].html());
 			}
-		}, errHandler)
+		}, errHandler)	
 	}
-
 	/*
 	res.render('results',
 	  { 
