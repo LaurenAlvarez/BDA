@@ -108,14 +108,16 @@ app.get('/results', function (req, res) {
 				}
 				let sanitize = wordsOnly(striptags(data.text)).toUpperCase();
 				mappy[result[j].publisher].push(sanitize);
+				console.log(data.publisher);
 				console.log(sanitize);
 				console.log(j)
 				console.log("-------------------------------------------");
 			}
 			let allText = Object.values(mappy)
-			console.log(allText)
-			//let ldaResult = lda(Object.values(mappy), 3, 5);
-			//console.log(ldaResult);
+			let flatText = [].concat.apply([], allText);
+			//console.log(flatText);
+			let ldaResult = lda(flatText, 3, 5);
+			console.log(ldaResult);
 		}, errHandler)	
 	}
 	/*
