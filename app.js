@@ -99,11 +99,14 @@ app.get('/results', function (req, res) {
 		}, errHandler).then (function(result){
 			for (j = 0; j < result.length; j++){
 				data = extractor(result[j].html());
-					striptags(data);
-					console.log(data);
-					mappy[result[j].publisher] =[];
-					mappy[result[j].publisher].push(result[j].html);
-					//console.log(result[0].html());
+				//console.log(data);
+				if (mappy[result[j].publisher] === undefined){
+					mappy[result[j].publisher] = [];
+				}
+				let sanitize = striptags(data.text);
+				mappy[result[j].publisher].push(sanitize);
+				console.log(sanitize);
+				console.log("----------------------");
 			}
 		}, errHandler)	
 	}
