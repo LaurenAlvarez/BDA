@@ -2,32 +2,32 @@
 // Node Modules  
 // --------------------------------------------------------------
 var express = require('express'),
-	  session = require('express-session'),
+    session = require('express-session'),
     stylus = require('stylus'),
     nib = require('nib'),
     rp = require('request-promise'),
-    	cheerio = require('cheerio'),
-    	request = require('request'),
-    	sec = require('search-engine-client'),
-    	extractor = require('unfluff'),
-    	app = express(),
-    	striptags = require('striptags'),
-    	wordsOnly = require('words-only'),
-    	lda = require('lda');
-    	
+      cheerio = require('cheerio'),
+      request = require('request'),
+      sec = require('search-engine-client'),
+      extractor = require('unfluff'),
+      app = express(),
+      striptags = require('striptags'),
+      wordsOnly = require('words-only'),
+      lda = require('lda');
+      
 // --------------------------------------------------------------
 // Server Globals  
 // --------------------------------------------------------------
-var 	searchDomains = [
-      	'money.cnn.com',
-      	'bbc.com',
-      	'foxnews.com'
-    	];
+var searchDomains = [
+      'money.cnn.com',
+      //'bbc.com',
+      'foxnews.com'
+    ];
 
 //--------------------------------------------------------------
 // Server Config
 //--------------------------------------------------------------
-	
+  
 app.set('views', __dirname + '/views')
 app.set('view engine', 'jade')
 app.use(express.logger('dev'))
@@ -57,82 +57,96 @@ var errHandler = function(err) {
       console.log(err);
     };
     
-    
-
 // --------------------------------------------------------------
 // Routes  
 // --------------------------------------------------------------
 
 app.get('/', function (req, res) {
-    res.render('index',
-    { title : 'Home' }
-    )
+    res.render('index', { title : 'Home' });
 });
 app.post('/search', function(req, res){
-	req.session.topic = req.body.topic
-	res.send(200)
+  req.session.topic = req.body.topic
+  res.send(200)
 });
 
 app.get('/results', function (req, res) {
-	let path = req.session.topic,
+  let subject = req.session.topic,
       result = [],
-	    nUrls = 5,
-	    articleTexts = [],
-	    mappy = {};
-	
-	for (let k = 0; k < searchDomains.length; k++ ) {
-		let html = "site:" + searchDomains[k] + " " + path + " filetype:html";
-		sec.google(html).then(function(result){
-			let promises = []
-			for(let i= 0; i < nUrls; i++){
-				promises.push(
-					new Promise(function(resolve, reject){
-						let options = {
-								uri: result.links[i],
-								transform: function(body){
-									return cheerio.load(body);
-								}
-							};
-						//console.log(result);
-						rp(options)
-					    .then(function(data)  {
-						    resolve(data);
-						}, errHandler)
-					})
-				);
-			}
-			
-			return Promise.all(promises)
-		}, errHandler).then (function(result){
-			for (j = 0; j < result.length; j++){
-				data = extractor(result[j].html());
-				let publisher = data.canonicalLink.split("/")[2]
-				//console.log(data);
-				if (mappy[publisher] === undefined){
-					mappy[publisher] = [];
-				}
-				let sanitize = wordsOnly(striptags(data.text)).toUpperCase();
-				mappy[publisher].push(sanitize);
-				console.log(publisher);
-				console.log(sanitize);
-				console.log(j)
-				console.log("-------------------------------------------");
-			}
-			let allText = Object.values(mappy)
-			let flatText = [].concat.apply([], allText);
-			//console.log(flatText);
-			let ldaResult = lda(flatText, 3, 5);
-			console.log(ldaResult);
-		}, errHandler)	
-	}
-	/*
-	res.render('results',
-	  { 
-	    title: 'Results',
-	    	topic: req.session.topic,
-	    	text: text
-	  })
-	  */
+      nUrls = 5,
+      searchPromises = [],
+      scrapePromises = [],
+      articleTexts = [],
+      mappy = {};
+  
+  // Create search promises
+  for (let k = 0; k < searchDomains.length; k++ ) {
+    searchPromises.push(
+      new Promise(function (resolve, reject) {
+        let query = "site:" + searchDomains[k] + " " + subject + " filetype:html";
+        sec.google(query).then(function(result){
+          resolve(result);
+        }, errHandler);
+      })
+    );
+  }
+  
+  // Scrape article texts from each search URL
+  Promise.all(searchPromises).then(function (searchResults) {
+    for (let domain of searchResults) {
+      // TODO: Ensure that a particular domain *has* nURLs to scan,
+      // otherwise, the below breaks (BBC guilty of this)
+      // TODO: What if returned search results have other domains
+      // than the ones requested?
+      for (let i = 0; i < nUrls; i++) {
+        scrapePromises.push(
+          new Promise(function(resolve, reject){
+            let options = {
+                  uri: domain.links[i],
+                  transform: function(body){
+                    return cheerio.load(body);
+                  }
+                };
+            rp(options).then(function(data)  {
+              resolve(data);
+            }, errHandler)
+          })
+        );
+      }
+    }
+    return Promise.all(scrapePromises);
+  
+  // Sanitize scraped article texts
+  }, errHandler).then(function (scrapedArticles) {
+      for (j = 0; j < scrapedArticles.length; j++){
+        let data = extractor(scrapedArticles[j].html());
+        let publisher = data.canonicalLink.split("/")[2];
+        if (mappy[publisher] === undefined){
+          mappy[publisher] = [];
+        }
+        let sanitize = wordsOnly(striptags(data.text)).toUpperCase();
+        mappy[publisher].push(sanitize);
+        console.log(publisher);
+        console.log(sanitize);
+        console.log(j)
+        console.log("-------------------------------------------");
+      }
+   
+  // Perform LDA Topic Modeling
+      let allText = Object.values(mappy)
+      let flatText = [].concat.apply([], allText);
+      let ldaResult = lda(flatText, 3, 5);
+      console.log(ldaResult);
+    }, errHandler);
+  
+  // Render Results Page
+  /*
+  res.render('results',
+    { 
+      title: 'Results',
+        topic: req.session.topic,
+        text: text
+    })
+    */
 })
 
 
