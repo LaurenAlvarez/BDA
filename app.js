@@ -78,7 +78,7 @@ app.get('/results', function (req, res) {
 	let mappy = {};
 	
 	for (let k = 0; k < searchDomains.length; k++ ) {
-		let html = searchDomains[k] + path + " filetype:html"
+		let html = "site:" + searchDomains[k] +" "+ path + " filetype:html"
 		sec.google(html).then(function(result){
 			let promises = []
 			for(let i= 0; i < nUrls; i++){
@@ -90,6 +90,7 @@ app.get('/results', function (req, res) {
 									return cheerio.load(body);
 								}
 							};
+						//console.log(result);
 						rp(options)
 					    .then(function(data)  {
 						    resolve(data);
@@ -97,18 +98,19 @@ app.get('/results', function (req, res) {
 					})
 				)		
 			}
-			//console.log(result);
+			
 			return Promise.all(promises)
 		}, errHandler).then (function(result){
 			for (j = 0; j < result.length; j++){
 				data = extractor(result[j].html());
+				let publisher = data.canonicalLink.split("/")[2]
 				//console.log(data);
-				if (mappy[result[j].publisher] === undefined){
-					mappy[result[j].publisher] = [];
+				if (mappy[publisher] === undefined){
+					mappy[publisher] = [];
 				}
 				let sanitize = wordsOnly(striptags(data.text)).toUpperCase();
-				mappy[result[j].publisher].push(sanitize);
-				console.log(data.publisher);
+				mappy[publisher].push(sanitize);
+				console.log(publisher);
 				console.log(sanitize);
 				console.log(j)
 				console.log("-------------------------------------------");
