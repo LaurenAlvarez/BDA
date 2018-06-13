@@ -103,6 +103,7 @@ app.get('/results', function (req, res) {
 	  for (let i = 0; i <= nUrls && domain.links.length >= nUrls ; i++) {
 	    scrapePromises.push(
 	      new Promise(function(resolve, reject){
+	    	  if (domain.links[i].split("/")[2] === domain.links[i+1].split("/")[2]){
 	        let options = {
 	      	          uri: domain.links[i],
 	      	          transform: function(body){
@@ -112,7 +113,8 @@ app.get('/results', function (req, res) {
 	          rp(options).then(function(data)  {
 	            resolve(data);
 	          }, errHandler)
-	      })
+	    	  }
+	    	  })
 	    );
 	   }
     }
