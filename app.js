@@ -20,7 +20,9 @@ var express = require('express'),
 // --------------------------------------------------------------
 var searchDomains = [
       'money.cnn.com',
-      //'bbc.com',
+      //'encyclopedia.com',
+      'bbc.com',
+      'nytimes.com',
       'foxnews.com'
     ];
 
@@ -97,36 +99,37 @@ app.get('/results', function (req, res) {
       // otherwise, the below breaks (BBC guilty of this)
       // TODO: What if returned search results have other domains
       // than the ones requested?
-      for (let i = 0; i < nUrls; i++) {
-        scrapePromises.push(
-          new Promise(function(resolve, reject){
-            let options = {
-                  uri: domain.links[i],
-                  transform: function(body){
-                    return cheerio.load(body);
-                  }
-                };
-            rp(options).then(function(data)  {
-              resolve(data);
-            }, errHandler)
-          })
-        );
-      }
+    	  console.log(domain)
+	  for (let i = 0; i <= nUrls && domain.links.length >= nUrls ; i++) {
+	    scrapePromises.push(
+	      new Promise(function(resolve, reject){
+	        let options = {
+	      	          uri: domain.links[i],
+	      	          transform: function(body){
+	                    return cheerio.load(body);
+	                  }
+	             };
+	          rp(options).then(function(data)  {
+	            resolve(data);
+	          }, errHandler)
+	      })
+	    );
+	   }
     }
     return Promise.all(scrapePromises);
   
   // Sanitize scraped article texts
   }, errHandler).then(function (scrapedArticles) {
       for (j = 0; j < scrapedArticles.length; j++){
-        let data = extractor(scrapedArticles[j].html());
-        let publisher = data.canonicalLink.split("/")[2];
+        let articleDetails = extractor(scrapedArticles[j].html());
+        let publisher = articleDetails.canonicalLink.split("/")[2];
         if (mappy[publisher] === undefined){
           mappy[publisher] = [];
         }
-        let sanitize = wordsOnly(striptags(data.text)).toUpperCase();
+        let sanitize = wordsOnly(striptags(articleDetails.text)).toUpperCase();
         mappy[publisher].push(sanitize);
         console.log(publisher);
-        console.log(sanitize);
+        //console.log(sanitize);
         console.log(j)
         console.log("-------------------------------------------");
       }
