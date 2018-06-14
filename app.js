@@ -6,25 +6,36 @@ var express = require('express'),
     stylus = require('stylus'),
     nib = require('nib'),
     rp = require('request-promise'),
-      cheerio = require('cheerio'),
-      request = require('request'),
-      sec = require('search-engine-client'),
-      extractor = require('unfluff'),
-      app = express(),
-      striptags = require('striptags'),
-      wordsOnly = require('words-only'),
-      lda = require('lda');
+    cheerio = require('cheerio'),
+    request = require('request'),
+    sec = require('search-engine-client'),
+    extractor = require('unfluff'),
+    app = express(),
+    striptags = require('striptags'),
+    wordsOnly = require('words-only'),
+    lda = require('lda'),
+    mla = require('mla');
+    
+	
       
 // --------------------------------------------------------------
 // Server Globals  
 // --------------------------------------------------------------
 var searchDomains = [
       'money.cnn.com',
-      //'encyclopedia.com',
+      'www.encyclopedia.com',
       'www.bbc.com',
       'www.nytimes.com',
-      'www.foxnews.com'
-    ];
+      'www.foxnews.com',
+      'www.wsj.com',
+      'www.cnn.com',
+      'www.cbsnews.com',
+      'www.nbcnews.com',
+      'www.latimes.com',
+      'www.huffingtonpost.com',
+      'www.theblaze.com',
+    ],
+	nUrls = 5;
 
 //--------------------------------------------------------------
 // Server Config
@@ -74,7 +85,6 @@ app.post('/search', function(req, res){
 app.get('/results', function (req, res) {
   let subject = req.session.topic,
       result = [],
-      nUrls = 5,
       searchPromises = [],
       scrapePromises = [],
       articleTexts = [],
@@ -129,8 +139,14 @@ app.get('/results', function (req, res) {
   
   // Sanitize scraped article texts
   }, errHandler).then(function (scrapedArticles) {
-      for (j = 0; j < scrapedArticles.length; j++){
+      for (let j = 0; j < scrapedArticles.length; j++){
         let articleDetails = extractor(scrapedArticles[j].html());
+        if (articleDetails.canonicalLink === undefined){
+        	  continue;
+        }
+        if (articleDetails.text.length <= 300){
+        	  continue;
+        }
         let publisher = articleDetails.canonicalLink.split("/")[2];
         if (mappy[publisher] === undefined){
           mappy[publisher] = [];
@@ -138,15 +154,17 @@ app.get('/results', function (req, res) {
         let sanitize = wordsOnly(striptags(articleDetails.text)).toUpperCase();
         mappy[publisher].push(sanitize);
         console.log(publisher);
-        //console.log(sanitize);
+        console.log(sanitize.length);
         console.log(j)
         console.log("-------------------------------------------");
       }
    
   // Perform LDA Topic Modeling
+      //console.log(mappy)
       let allText = Object.values(mappy)
       let flatText = [].concat.apply([], allText);
-      let ldaResult = lda(flatText, 3, 5);
+      //console.log(flatText)
+      let ldaResult = lda(flatText, 3, 5, null, 0.01, 0.01);
       console.log(ldaResult);
     }, errHandler);
   
