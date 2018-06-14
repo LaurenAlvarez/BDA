@@ -86,7 +86,12 @@ app.get('/results', function (req, res) {
       new Promise(function (resolve, reject) {
         let query = "site:" + searchDomains[k] + " " + subject + " filetype:html";
         sec.google(query).then(function(result){
-          resolve(result);
+          console.log(result)
+          //if (searchDomains[k].indexOf(result.links[i].split("/")[2]) !== -1){
+        	  //	result.splice()
+          //}
+          //purge any results that don't match the searchDomain[k] from the search
+        	  resolve(result);
         }, errHandler);
       })
     );
@@ -99,11 +104,10 @@ app.get('/results', function (req, res) {
       // otherwise, the below breaks (BBC guilty of this)
       // TODO: What if returned search results have other domains
       // than the ones requested?
-    	  console.log(domain)
-	  for (let i = 0; i <= nUrls && domain.links.length >= nUrls ; i++) {
+    	  //console.log(domain)
+	  for (let i = 0; i < domain.links.length && i < nUrls; i++) {
 	    scrapePromises.push(
 	      new Promise(function(resolve, reject){
-	    	  if (domain.links[i].split("/")[2] === domain.links[i+1].split("/")[2]){
 	        let options = {
 	      	          uri: domain.links[i],
 	      	          transform: function(body){
@@ -113,7 +117,6 @@ app.get('/results', function (req, res) {
 	          rp(options).then(function(data)  {
 	            resolve(data);
 	          }, errHandler)
-	    	  }
 	    	  })
 	    );
 	   }
