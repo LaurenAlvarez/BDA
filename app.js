@@ -21,9 +21,9 @@ var express = require('express'),
 var searchDomains = [
       'money.cnn.com',
       //'encyclopedia.com',
-      'bbc.com',
-      'nytimes.com',
-      'foxnews.com'
+      'www.bbc.com',
+      'www.nytimes.com',
+      'www.foxnews.com'
     ];
 
 //--------------------------------------------------------------
@@ -86,12 +86,16 @@ app.get('/results', function (req, res) {
       new Promise(function (resolve, reject) {
         let query = "site:" + searchDomains[k] + " " + subject + " filetype:html";
         sec.google(query).then(function(result){
+          for (let i= 0; i < result.links.length; i++ ){
+        	  	linkDomain = result.links[i].split("/")[2]
+        	  	if (searchDomains[k] !== linkDomain){
+        	  	  result.links.splice(i, 1)
+        	  	  i--
+        	  	}
+          }
           console.log(result)
-          //if (searchDomains[k].indexOf(result.links[i].split("/")[2]) !== -1){
-        	  //	result.splice()
-          //}
+          resolve(result);
           //purge any results that don't match the searchDomain[k] from the search
-        	  resolve(result);
         }, errHandler);
       })
     );
