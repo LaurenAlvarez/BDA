@@ -22,20 +22,26 @@ var express = require('express'),
 // Server Globals  
 // --------------------------------------------------------------
 var searchDomains = [
-      'money.cnn.com',
-      'www.encyclopedia.com',
-      'www.bbc.com',
-      'www.nytimes.com',
-      'www.foxnews.com',
-      'www.wsj.com',
-      'www.cnn.com',
-      'www.cbsnews.com',
-      'www.nbcnews.com',
-      'www.latimes.com',
-      'www.huffingtonpost.com',
-      'www.theblaze.com',
+	{domain: 'money.cnn.com'},
+	//{domain: 'www.wikipedia.com', sParams: ''},
+	{domain: 'www.bbc.com', sParams: ''},
+	{domain: 'www.nytimes.com'},
+	{domain: 'www.foxnews.com'},
+	//{domain: 'www.wsj.com'},
+	//{domain: 'www.cnn.com'},
+	//{domain: 'www.cbsnews.com', sParams: ''},
+	//{domain: 'www.nbcnews.com'},
+	{domain: 'www.latimes.com'},
+	{domain: 'www.huffingtonpost.com'},
+	{domain: 'www.theblaze.com', sParams: ''},
+	//{domain: 'townhall.com', sParams: ''},
+	{domain: 'www.nationalreview.com', sParams: ''},
+	//{domain: 'www.newsmax.com', sParams: ''},
+	//{domain: 'www.redstate.com', sParams: ''},
+	//{domain: 'www.theatlantic.com', sParams: ''},
     ],
-	nUrls = 5;
+	nUrls = 5,
+	articleMinimum = 300;
 
 //--------------------------------------------------------------
 // Server Config
@@ -94,11 +100,12 @@ app.get('/results', function (req, res) {
   for (let k = 0; k < searchDomains.length; k++ ) {
     searchPromises.push(
       new Promise(function (resolve, reject) {
-        let query = "site:" + searchDomains[k] + " " + subject + " filetype:html";
+        let query = "site:" + searchDomains[k].domain + " " + subject 
+            + (searchDomains[k].sParams !== undefined? searchDomains[k].sParams : ' filetype:html');
         sec.google(query).then(function(result){
           for (let i= 0; i < result.links.length; i++ ){
         	  	linkDomain = result.links[i].split("/")[2]
-        	  	if (searchDomains[k] !== linkDomain){
+        	  	if (searchDomains[k].domain !== linkDomain){
         	  	  result.links.splice(i, 1)
         	  	  i--
         	  	}
@@ -144,7 +151,7 @@ app.get('/results', function (req, res) {
         if (articleDetails.canonicalLink === undefined){
         	  continue;
         }
-        if (articleDetails.text.length <= 300){
+        if (articleDetails.text.length <= articleMinimum){
         	  continue;
         }
         let publisher = articleDetails.canonicalLink.split("/")[2];
@@ -164,19 +171,17 @@ app.get('/results', function (req, res) {
       let allText = Object.values(mappy)
       let flatText = [].concat.apply([], allText);
       //console.log(flatText)
-      let ldaResult = lda(flatText, 3, 5, null, 0.01, 0.01);
+      let ldaResult = lda(flatText, 3, 5, null, 0.2, 0.05);
       console.log(ldaResult);
     }, errHandler);
   
   // Render Results Page
-  /*
+  
   res.render('results',
     { 
-      title: 'Results',
-        topic: req.session.topic,
-        text: text
+      title: 'Results'
     })
-    */
+    
 })
 
 
