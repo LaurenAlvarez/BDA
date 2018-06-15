@@ -8,7 +8,7 @@ var express = require('express'),
     rp = require('request-promise'),
     cheerio = require('cheerio'),
     request = require('request'),
-    sec = require('search-engine-client'),
+    sec = require('google-it'),
     extractor = require('unfluff'),
     app = express(),
     striptags = require('striptags'),
@@ -102,15 +102,16 @@ app.get('/results', function (req, res) {
       new Promise(function (resolve, reject) {
         let query = "site:" + searchDomains[k].domain + " " + subject 
             + (searchDomains[k].sParams !== undefined? searchDomains[k].sParams : ' filetype:html');
-        sec.google(query).then(function(result){
-          for (let i= 0; i < result.links.length; i++ ){
-        	  	linkDomain = result.links[i].split("/")[2]
+        sec({'query': query}).then(function(result){
+        	  console.log(result)	
+          for (let i= 0; i < result.length; i++ ){
+        	  	let linkDomain = result[i].link.split("/")[2]
         	  	if (searchDomains[k].domain !== linkDomain){
         	  	  result.links.splice(i, 1)
         	  	  i--
         	  	}
           }
-          console.log(result)
+          //console.log(result)
           resolve(result);
           //purge any results that don't match the searchDomain[k] from the search
         }, errHandler);
@@ -120,17 +121,18 @@ app.get('/results', function (req, res) {
   
   // Scrape article texts from each search URL
   Promise.all(searchPromises).then(function (searchResults) {
+	  //console.log(searchResults)
     for (let domain of searchResults) {
       // TODO: Ensure that a particular domain *has* nURLs to scan,
       // otherwise, the below breaks (BBC guilty of this)
       // TODO: What if returned search results have other domains
       // than the ones requested?
     	  //console.log(domain)
-	  for (let i = 0; i < domain.links.length && i < nUrls; i++) {
+	  for (let i = 0; i < domain.length && i < nUrls; i++) {
 	    scrapePromises.push(
 	      new Promise(function(resolve, reject){
 	        let options = {
-	      	          uri: domain.links[i],
+	      	          uri: domain[i].link,
 	      	          transform: function(body){
 	                    return cheerio.load(body);
 	                  }

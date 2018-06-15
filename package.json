@@ -10,6 +10,7 @@
         "express": "3.0.0alpha4",
         "express-session": "^1.15.6",
         "google": "^2.1.0",
+        "google-it": "^1.1.1",
         "google-search-scrape": "^0.2.5",
         "google-search-scraper": "0.0.3",
         "isomorphic-fetch": "^2.2.1",
