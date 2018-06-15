@@ -15,7 +15,7 @@ var express = require('express'),
     wordsOnly = require('words-only'),
     lda = require('lda'),
     mla = require('mla'),
-    //summaryTool = require('node-summary'),
+    in_a = require('in-a-nutshell'),
     removePunctuation = require('remove-punctuation');
     
 	
@@ -27,17 +27,17 @@ var searchDomains = [
 	{domain: 'money.cnn.com'},
 	//{domain: 'www.wikipedia.com', sParams: ''},
 	{domain: 'www.bbc.com', sParams: ''},
-	{domain: 'www.nytimes.com'},
+	//{domain: 'www.nytimes.com'},
 	{domain: 'www.foxnews.com'},
 	//{domain: 'www.wsj.com'},
 	//{domain: 'www.cnn.com'},
 	//{domain: 'www.cbsnews.com', sParams: ''},
 	//{domain: 'www.nbcnews.com'},
-	{domain: 'www.latimes.com'},
-	{domain: 'www.huffingtonpost.com'},
-	{domain: 'www.theblaze.com', sParams: ''},
+	//{domain: 'www.latimes.com'},
+	//{domain: 'www.huffingtonpost.com'},
+	//{domain: 'www.theblaze.com', sParams: ''},
 	//{domain: 'townhall.com', sParams: ''},
-	{domain: 'www.nationalreview.com', sParams: ''},
+	//{domain: 'www.nationalreview.com', sParams: ''},
 	//{domain: 'www.newsmax.com', sParams: ''},
 	//{domain: 'www.redstate.com', sParams: ''},
 	//{domain: 'www.theatlantic.com', sParams: ''},
@@ -96,7 +96,7 @@ app.get('/results', function (req, res) {
       searchPromises = [],
       scrapePromises = [],
       articleTexts = [],
-      mappy = {};
+      processedTexts = {};
   
   // Create search promises
   for (let k = 0; k < searchDomains.length; k++ ) {
@@ -163,33 +163,40 @@ app.get('/results', function (req, res) {
         	  continue;
         }
         let publisher = articleDetails.canonicalLink.split("/")[2];
-        if (mappy[publisher] === undefined){
-          mappy[publisher] = [];
+        if (processedTexts[publisher] === undefined){
+          processedTexts[publisher] = {rawText: [], saniText: [], sumText: []};
         }
         let sanitize = wordsOnly(striptags(articleDetails.text)).toUpperCase();
         let cleanText = removePunctuation(sanitize)
-        mappy[publisher].push(cleanText);
-        //console.log(publisher);
-        //console.log(sanitize.length);
+        processedTexts[publisher].saniText.push(cleanText);
+        processedTexts[publisher].rawText.push(articleDetails.text);
+        console.log(publisher);
+        //console.log(cleanText.length);
         console.log(j)
         console.log("-------------------------------------------");
       }
-     // summarizes the text via url
-      /*summaryTool.summarizeFromUrl(articleDetails.canonicalLink, function(err, summary) {
-    	    if(err) {
-    	      console.log("err is ", result)
-    	    } else {
-    	      console.log(summary)
-    	    }
-      })
-   */
+      //console.log(processedTexts)
+     // summarizes the text 
+      for ( let publisher of Object.values(processedTexts)){
+    	  	let rawText = publisher.rawText
+    	  	//console.log(publisher)
+    	  	console.log(rawText)
+    	  	for (let i = 0; i < rawText.length; i++ ){
+    	  	  let summary = in_a.nutshell(rawText[i], 3);
+    	  	  console.log(summary)
+    	  	  publisher.sumText.push(summary)
+    	  	}
+      }
+      //}
   // Perform LDA Topic Modeling
       //console.log(mappy)
-      let allText = Object.values(mappy)
+      /*
+      let allText = Object.values(processedTexts)
       let flatText = [].concat.apply([], allText);
       //console.log(flatText)
       let ldaResult = lda(flatText, 3, 5, null, 0.2, 0.05);
       console.log(ldaResult);
+      */
     }, errHandler);
   
   // Render Results Page
