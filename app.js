@@ -102,19 +102,23 @@ app.get('/results', function (req, res) {
       new Promise(function (resolve, reject) {
         let query = "site:" + searchDomains[k].domain + " " + subject 
             + (searchDomains[k].sParams !== undefined? searchDomains[k].sParams : ' filetype:html');
-        sec({'query': query}).then(function(result){
-        	  console.log(result)	
-          for (let i= 0; i < result.length; i++ ){
-        	  	let linkDomain = result[i].link.split("/")[2]
-        	  	if (searchDomains[k].domain !== linkDomain){
-        	  	  result.links.splice(i, 1)
-        	  	  i--
-        	  	}
-          }
-          //console.log(result)
-          resolve(result);
-          //purge any results that don't match the searchDomain[k] from the search
-        }, errHandler);
+        try{
+        	  sec({'query': query}).then(function(result){
+            console.log(result)	
+            for (let i= 0; i < result.length; i++ ){
+          	  	let linkDomain = result[i].link.split("/")[2]
+          	  	if (searchDomains[k].domain !== linkDomain){
+          	  	  result.links.splice(i, 1)
+          	  	  i--
+          	  	}
+            }
+            //console.log(result)
+            resolve(result);
+            //purge any results that don't match the searchDomain[k] from the search
+          }, errHandler);
+        } catch (err){
+        	  console.log(err)
+        }
       })
     );
   }
