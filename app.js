@@ -14,7 +14,9 @@ var express = require('express'),
     striptags = require('striptags'),
     wordsOnly = require('words-only'),
     lda = require('lda'),
-    mla = require('mla');
+    mla = require('mla'),
+    //summaryTool = require('node-summary'),
+    removePunctuation = require('remove-punctuation');
     
 	
       
@@ -165,13 +167,22 @@ app.get('/results', function (req, res) {
           mappy[publisher] = [];
         }
         let sanitize = wordsOnly(striptags(articleDetails.text)).toUpperCase();
-        mappy[publisher].push(sanitize);
-        console.log(publisher);
-        console.log(sanitize.length);
+        let cleanText = removePunctuation(sanitize)
+        mappy[publisher].push(cleanText);
+        //console.log(publisher);
+        //console.log(sanitize.length);
         console.log(j)
         console.log("-------------------------------------------");
       }
-   
+     // summarizes the text via url
+      /*summaryTool.summarizeFromUrl(articleDetails.canonicalLink, function(err, summary) {
+    	    if(err) {
+    	      console.log("err is ", result)
+    	    } else {
+    	      console.log(summary)
+    	    }
+      })
+   */
   // Perform LDA Topic Modeling
       //console.log(mappy)
       let allText = Object.values(mappy)
