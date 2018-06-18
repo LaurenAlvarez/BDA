@@ -44,7 +44,6 @@ var searchDomains = [
     ],
 	nUrls = 5,
 	articleMinimum = 300;
-
 //--------------------------------------------------------------
 // Server Config
 //--------------------------------------------------------------
@@ -177,26 +176,28 @@ app.get('/results', function (req, res) {
       }
       //console.log(processedTexts)
      // summarizes the text 
-      for ( let publisher of Object.values(processedTexts)){
+      let articleObjs = Object.values(processedTexts)
+      for ( let publisher of articleObjs){
     	  	let rawText = publisher.rawText
-    	  	//console.log(publisher)
-    	  	console.log(rawText)
+    	  	//console.log(rawText)
     	  	for (let i = 0; i < rawText.length; i++ ){
     	  	  let summary = in_a.nutshell(rawText[i], 3);
-    	  	  console.log(summary)
+    	  	  //console.log(summary)
+    	  	  console.log(i)
+    	  	  console.log("-------------------------------------------");
+    	  	  console.log("-------------------------------------------");
     	  	  publisher.sumText.push(summary)
     	  	}
       }
-      //}
-  // Perform LDA Topic Modeling
-      //console.log(mappy)
-      /*
-      let allText = Object.values(processedTexts)
-      let flatText = [].concat.apply([], allText);
-      //console.log(flatText)
-      let ldaResult = lda(flatText, 3, 5, null, 0.2, 0.05);
+      
+      // making array for processedTexts to be able to use LDA
+      let ldaTexts = articleObjs.map((publisherObj) => {
+    	  	return publisherObj.saniText
+      })
+      // Perform LDA Topic Modeling
+      ldaTexts = [].concat.apply([], ldaTexts);
+      let ldaResult = lda(ldaTexts, 3, 5, null, 0.002, 0.05);
       console.log(ldaResult);
-      */
     }, errHandler);
   
   // Render Results Page
