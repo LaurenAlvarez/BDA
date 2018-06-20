@@ -1,10 +1,20 @@
 extend layout
 block content
   p
-    | Below are your results for your search: #{topic}
+    | Below are your results for your search: #{subject}
   p 
-    |Here is our scrapped HTML:
-    | #{text}
+ 
+    
+    |Here are the results:
+    ul
+      each val, keys in results
+        li=  val.articleLinks
+       
+       
+    ul 
+      each val, keys in results
+        li= val.articleTitles  
+          
     
   block scripts  
    script(src="https://code.jquery.com/jquery-3.3.1.min.js", defer)

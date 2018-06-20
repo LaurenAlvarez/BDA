@@ -105,7 +105,7 @@ app.get('/results', function (req, res) {
             + (searchDomains[k].sParams !== undefined? searchDomains[k].sParams : ' filetype:html');
         try{
         	  sec({'query': query}).then(function(result){
-            console.log(result)	
+           // console.log(result)	
             for (let i= 0; i < result.length; i++ ){
           	  	let linkDomain = result[i].link.split("/")[2]
           	  	if (searchDomains[k].domain !== linkDomain){
@@ -163,13 +163,16 @@ app.get('/results', function (req, res) {
         }
         let publisher = articleDetails.canonicalLink.split("/")[2];
         if (processedTexts[publisher] === undefined){
-          processedTexts[publisher] = {rawText: [], saniText: [], sumText: []};
+          processedTexts[publisher] = {articleTitles: [], articleLinks: [], rawText: [], saniText: [], sumText: []};
         }
         let sanitize = wordsOnly(striptags(articleDetails.text)).toUpperCase();
         let cleanText = removePunctuation(sanitize)
+        processedTexts[publisher].articleTitles.push(articleDetails.title);
+        processedTexts[publisher].articleLinks.push(articleDetails.canonicalLink);
         processedTexts[publisher].saniText.push(cleanText);
         processedTexts[publisher].rawText.push(articleDetails.text);
-        console.log(publisher);
+        console.log(processedTexts);
+        //console.log(publisher);
         //console.log(cleanText.length);
         console.log(j)
         console.log("-------------------------------------------");
@@ -187,25 +190,32 @@ app.get('/results', function (req, res) {
     	  	  console.log("-------------------------------------------");
     	  	  console.log("-------------------------------------------");
     	  	  publisher.sumText.push(summary)
+    	  	  console.log(publisher.sumText)
     	  	}
       }
       
       // making array for processedTexts to be able to use LDA
       let ldaTexts = articleObjs.map((publisherObj) => {
-    	  	return publisherObj.saniText
+    	  	return publisherObj.sumText
       })
       // Perform LDA Topic Modeling
       ldaTexts = [].concat.apply([], ldaTexts);
-      let ldaResult = lda(ldaTexts, 3, 5, null, 0.002, 0.05);
+      let ldaResult = lda(ldaTexts, 3, 5);
       console.log(ldaResult);
+      console.log(resultsReport);
+      // Render Results Page
+      res.render('results',
+    		    { 
+    		      title: 'Results',
+    		      subject: req.session.topic,
+    		      results: processedTexts
+    		      //summary: Object.values(processedTexts).sumText
+    		    })
     }, errHandler);
   
-  // Render Results Page
+
   
-  res.render('results',
-    { 
-      title: 'Results'
-    })
+  
     
 })
 
