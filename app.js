@@ -30,17 +30,18 @@ var searchDomains = [
 	//{domain: 'www.nytimes.com'},
 	{domain: 'www.foxnews.com'},
 	//{domain: 'www.wsj.com'},
-	//{domain: 'www.cnn.com'},
+	{domain: 'www.cnn.com'},
 	//{domain: 'www.cbsnews.com', sParams: ''},
 	//{domain: 'www.nbcnews.com'},
 	//{domain: 'www.latimes.com'},
 	//{domain: 'www.huffingtonpost.com'},
-	//{domain: 'www.theblaze.com', sParams: ''},
+	{domain: 'www.theblaze.com', sParams: ''},
 	//{domain: 'townhall.com', sParams: ''},
 	//{domain: 'www.nationalreview.com', sParams: ''},
 	//{domain: 'www.newsmax.com', sParams: ''},
 	//{domain: 'www.redstate.com', sParams: ''},
 	//{domain: 'www.theatlantic.com', sParams: ''},
+	{domain: 'www.independent.co.uk'}
     ],
 	nUrls = 5,
 	articleMinimum = 300;
@@ -184,7 +185,7 @@ app.get('/results', function (req, res) {
     	  	let rawText = publisher.rawText
     	  	//console.log(rawText)
     	  	for (let i = 0; i < rawText.length; i++ ){
-    	  	  let summary = in_a.nutshell(rawText[i], 3);
+    	  	  let summary = in_a.nutshell(rawText[i], 2);
     	  	  //console.log(summary)
     	  	  console.log(i)
     	  	  console.log("-------------------------------------------");
