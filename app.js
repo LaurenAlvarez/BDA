@@ -35,7 +35,7 @@ var searchDomains = [
 	//{domain: 'www.nbcnews.com'},
 	//{domain: 'www.latimes.com'},
 	//{domain: 'www.huffingtonpost.com'},
-	{domain: 'www.theblaze.com', sParams: ''},
+	//{domain: 'www.theblaze.com', sParams: ''},
 	//{domain: 'townhall.com', sParams: ''},
 	//{domain: 'www.nationalreview.com', sParams: ''},
 	//{domain: 'www.newsmax.com', sParams: ''},
@@ -86,12 +86,12 @@ app.get('/', function (req, res) {
     res.render('index', { title : 'Home' });
 });
 app.post('/search', function(req, res){
-  req.session.topic = req.body.topic
+  req.session.subject = req.body.topic
   res.send(200)
 });
 
 app.get('/results', function (req, res) {
-  let subject = req.session.topic,
+  let subject = req.session.subject,
       result = [],
       searchPromises = [],
       scrapePromises = [],
@@ -185,7 +185,7 @@ app.get('/results', function (req, res) {
     	  	let rawText = publisher.rawText
     	  	//console.log(rawText)
     	  	for (let i = 0; i < rawText.length; i++ ){
-    	  	  let summary = in_a.nutshell(rawText[i], 2);
+    	  	  let summary = in_a.nutshell(rawText[i], 1);
     	  	  //console.log(summary)
     	  	  console.log(i)
     	  	  console.log("-------------------------------------------");
@@ -203,13 +203,13 @@ app.get('/results', function (req, res) {
       ldaTexts = [].concat.apply([], ldaTexts);
       let ldaResult = lda(ldaTexts, 3, 5);
       console.log(ldaResult);
-      console.log(resultsReport);
       // Render Results Page
       res.render('results',
     		    { 
     		      title: 'Results',
-    		      subject: req.session.topic,
-    		      results: processedTexts
+    		      subject: req.session.subject,
+    		      results: processedTexts,
+    		     // lda: ldaResult
     		      //summary: Object.values(processedTexts).sumText
     		    })
     }, errHandler);

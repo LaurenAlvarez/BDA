@@ -7,13 +7,14 @@ block content
     
     |Here are the results:
     ul
-      each val, keys in results
-        li=  val.articleLinks
+      each obj, key in results
+        each link in obj.articleLinks
+          each title in obj.articleTitles
+            li
+              a(href=link, target='_blank') #{title} 
+          
+   
        
-       
-    ul 
-      each val, keys in results
-        li= val.articleTitles  
           
     
   block scripts  
