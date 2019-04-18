@@ -1,5 +1,20 @@
 extend layout
 block content
   p
-    | Below are your results.
-  
+    | Below are your results for your search: #{subject}
+    
+  p
+    |Here are the results:
+    ul
+      each obj, domain in results
+        each title, index in obj.articleTitles
+            li
+              a(href=obj.articleLinks[index], target='_blank') #{title} 
+          
+   
+       
+          
+    
+  block scripts  
+   script(src="https://code.jquery.com/jquery-3.3.1.min.js", defer)
+   script(src="js/index.js", defer)
